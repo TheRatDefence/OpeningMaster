@@ -83,6 +83,18 @@ class MainDisplay:
 
         self._running: bool = False
 
+    def retrieve_screen_instance(self, screen_name: str) -> Screen:
+        """
+        Returns an instance of the given screen_name.
+        Should be called inside a try-except loop encase the given screen_name doesn't exist.
+        :param screen_name: The screen name to search for an instance of.
+        :return: A screen or a value error
+        """
+        if screen_name in self._screen_map.keys():
+            return self._screen_map[screen_name]
+        else:
+            raise ValueError("Screen name does not exist")
+
 
     def game_loop(self):
         # TODO(): Implement the game_loop logic

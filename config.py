@@ -1,0 +1,1 @@
+WINDOW_SIZE = (640, 640) # The size of the window in pixels

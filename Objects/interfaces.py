@@ -63,7 +63,7 @@ class Screen(ABC):
         ...
 
     @abstractmethod
-    def update(self, delta_ms: float) -> str |None:
+    def update(self, delta_ms: int) -> str |None:
         """
         Handles the per-frame logic
         :param delta_ms: The time since last update call

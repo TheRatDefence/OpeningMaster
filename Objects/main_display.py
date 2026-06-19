@@ -128,6 +128,15 @@ class MainDisplay:
             # 5. flip the display
 
 
+    def transition_screens(self, new_screen: Screen):
+        """
+        Transitions the active screen to a new one
+        :param new_screen: The screen replacing the previous one
+        :return:
+        """
+        #TODO(): Finish this method
+
+        old_screen = self.active_screen
         pass
 
     def shutdown(self):

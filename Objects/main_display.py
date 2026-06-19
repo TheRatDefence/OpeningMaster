@@ -70,8 +70,10 @@ class MainDisplay:
         :param window_size: The size of the window as a tuple
         :param framerate: The framerate as an integer
         """
-        self.window_surface: p.Surface  = self._new_display_surface(window_size)
-        self.ui_manager: pg.UIManager   = self._new_display_ui_manager(window_size)
+        p.init()
+
+        self._window_surface: p.Surface  = self._new_display_surface(window_size).convert_alpha()
+        self._ui_manager: pg.UIManager   = self._new_display_ui_manager(window_size)
 
         self.framerate: int             = framerate
         self.clock: p.time.Clock        = p.time.Clock()

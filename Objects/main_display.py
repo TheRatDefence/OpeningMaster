@@ -120,13 +120,33 @@ class MainDisplay:
 
             # 2. process events
             for event in p.event.get():
-                self.active_screen.handle_event(event) # Will fix active_screen maybe None when
+                match event.type:
+                    case p.QUIT:
+                        self._running = False
 
+                self.active_screen.handle_event(event)
+                self._ui_manager.process_events(event)
+
+            self._ui_manager.update(delta)
 
             # 3. update active screen
-            # 4. render active screen
-            # 5. flip the display
+            update_value = self.active_screen.update(delta) # Update value is either a string (new screen name) or None
+            if update_value: # Active screen has returned a screen name
+                try:
+                    screen_instance = self.retrieve_screen_instance(update_value)
+                    self.transition_screens(screen_instance)
 
+                except ValueError as e: # Screen name could not be found within map of instantiated screen
+                    # TODO(): Design and implement an error handling system
+                    pass
+
+            # 4. render active screen
+            self.render_to_display(self.active_screen.render())
+
+            # 5. flip the display
+            p.display.flip()
+
+        return
 
     def transition_screens(self, new_screen: Screen):
         """

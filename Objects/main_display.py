@@ -96,8 +96,24 @@ class MainDisplay:
             raise ValueError("Screen name does not exist")
 
 
-    def game_loop(self):
-        # TODO(): Implement the game_loop logic
+    def render_to_display(self, screen_surface: p.Surface) -> None:
+        """
+        Renders a surface to the main display
+        :param screen_surface: The surface to be blit onto the window
+        """
+        # TODO(): Add more rendering customisation (e.g. screen border)
+
+        self._window_surface.blit(screen_surface, dest=(0, 0)) # May need to make dest change-able encase a screen wants to display to a certain location
+        self._ui_manager.draw_ui(self._window_surface)
+
+        return
+
+    def game_loop(self) -> None:
+        """
+        The main game loop. Runs every frame and blocks the main thread.
+        Start by setting MainDisplay().running = True
+        """
+
         while self._running:
             # 1. tick the clock
             delta: int = self.clock.tick(self.framerate) # Delta is the time between current frame and last frame

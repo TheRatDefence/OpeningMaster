@@ -10,8 +10,6 @@ class Screen(ABC):
     An interface that all screens must implement in order to be used in the main game loop.
     """
 
-    #TODO(): Document Registry Logic
-
     # ----------| Registry |---------- #
     _registry: dict[str, "type[Screen]"] = {}   # Have to resolve the Screen forward reference using a string literal
 

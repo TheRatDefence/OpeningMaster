@@ -48,8 +48,7 @@ class MainDisplay:
 
     @running.setter
     def running(self, state: bool):
-        # TODO(SP: Fix running setter): Guard condition is inverted — fires on state change instead of no-op
-        if self._running != state:        # running: true -> true or false -> false
+        if self._running is state:        # running: true -> true or false -> false
             return
 
         if self._running and not state:   # running: true -> false

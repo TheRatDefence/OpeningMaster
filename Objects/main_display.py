@@ -57,7 +57,7 @@ class MainDisplay:
             self._running = False
             return
 
-        if self._running and state:       # running: false -> true
+        if not self._running and state:       # running: false -> true
             self._running = True          # Design decision: The main thread will be blocked from this point by a while loop in game_loop()
             self.game_loop()
             return

@@ -1,3 +1,4 @@
+import sys
 import pygame as p
 import pygame_gui as pg
 from Objects.interfaces import Screen
@@ -159,10 +160,14 @@ class MainDisplay:
         old_screen = self.active_screen
         pass
 
-    def shutdown(self):
-        # TODO(SP: Implement shutdown): Add pygame.quit() and sys.exit() so the window closes cleanly
-        pass
+    def shutdown(self) -> None:
+        """
+        Shuts down the app and exits cleanly.
+        """
+        print("Quiting...")
 
+        p.quit()
+        sys.exit()
 
 
 

@@ -1,6 +1,6 @@
 import pygame as p
 import pygame_gui as pg
-from interfaces import Screen
+from Objects.interfaces import Screen
 
 
 #---------------------------------------------------------------------------------------------------#

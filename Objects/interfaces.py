@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import pygame
-import pygame_gui
+import pygame as p
+import pygame_gui as pg
 
 
 #---------------------------------------------------------------------------------------------------#
@@ -36,7 +36,7 @@ class Screen(ABC):
    # ---------| Properties |--------- #
     @property
     @abstractmethod
-    def local_screen_surface(self) -> pygame.Surface:
+    def local_screen_surface(self) -> p.Surface:
         """
         :return: The local screen surface
         """
@@ -44,7 +44,7 @@ class Screen(ABC):
 
     @property
     @abstractmethod
-    def local_ui_manager(self) -> pygame_gui.UIManager:
+    def local_ui_manager(self) -> pg.UIManager:
         """
         :return: The local UIManager
         """
@@ -54,7 +54,7 @@ class Screen(ABC):
     # ---------| Abstract Methods |------------ #
 
     @abstractmethod
-    def handle_event(self, event: pygame.event.Event) -> None:
+    def handle_event(self, event: p.event.Event) -> None:
         """
         Receives one pygame event per call.
         :param event: The pygame event
@@ -72,7 +72,7 @@ class Screen(ABC):
         ...
 
     @abstractmethod
-    def render(self) -> pygame.Surface:
+    def render(self) -> p.Surface:
         """
         Draws the screen
         :return: Returns the drawn screen
@@ -80,17 +80,20 @@ class Screen(ABC):
         ...
 
 
-    # ---------| Inheritable Methods |------------ #
+    # ---------| Inheritable |------------ #
 
-    def handoff(self, last_surface: pygame.Surface, last_UIManager: pygame_gui.UIManager):
+    @property
+    def window_size(self) -> tuple[int, int]: # Important design decision: All screens need the window size, but shouldn't be able to access the main surface directly.
         """
-        Called by the transition process
-        :param last_surface: The surface of the last active screen
-        :param last_UIManager: The UIManager used by the last screen
-        :return: None
+        Returns the surface size of the window instantiated from MainDisplay.
+        Warning: Only call after initialising a MainDisplay
+        :return: tuple[int, int]
         """
-        # TODO(SP: Implement screen transition animation): Use last_surface to fade/slide between screens
+        display = p.display.get_surface()
 
-
+        if display:
+            return display.get_size()
+        else:
+            raise Exception("A MainDisplay instance must be initialised before initialising screens")
 
 #---------------------------------------------------------------------------------------------------#

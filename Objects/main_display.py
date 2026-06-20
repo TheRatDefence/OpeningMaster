@@ -155,10 +155,7 @@ class MainDisplay:
         :param new_screen: The screen replacing the previous one
         :return:
         """
-        # TODO(SP: Implement transition_screens): Call handoff(), then swap active_screen to new_screen
-
-        old_screen = self.active_screen
-        pass
+        self.active_screen = new_screen
 
     def shutdown(self) -> None:
         """

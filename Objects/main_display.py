@@ -48,6 +48,7 @@ class MainDisplay:
 
     @running.setter
     def running(self, state: bool):
+        # TODO(SP: Fix running setter): Guard condition is inverted — fires on state change instead of no-op
         if self._running != state:        # running: true -> true or false -> false
             return
 
@@ -78,7 +79,7 @@ class MainDisplay:
         self.framerate: int             = framerate
         self.clock: p.time.Clock        = p.time.Clock()
 
-        self.active_screen: Screen | None   = None # TODO(): Determine how the default screen will be picked (maybe through a decorator)
+        self.active_screen: Screen | None   = None # TODO(SP: Default screen): Replace hardcoded "dashboard" with a decorator-based default screen mechanism
         self._screen_map: dict[str, Screen] = self._build_screens()
 
         self._running: bool = False
@@ -101,7 +102,7 @@ class MainDisplay:
         Renders a surface to the main display
         :param screen_surface: The surface to be blit onto the window
         """
-        # TODO(): Add more rendering customisation (e.g. screen border)
+        # TODO(SP: Screen border): Add configurable screen border/letterbox rendering
 
         self._window_surface.blit(screen_surface, dest=(0, 0)) # May need to make dest change-able encase a screen wants to display to a certain location
         self._ui_manager.draw_ui(self._window_surface)
@@ -137,7 +138,7 @@ class MainDisplay:
                     self.transition_screens(screen_instance)
 
                 except ValueError as e: # Screen name could not be found within map of instantiated screen
-                    # TODO(): Design and implement an error handling system
+                    # TODO(SP: Error handling): Design and implement an error screen instead of silent pass
                     pass
 
             # 4. render active screen
@@ -154,13 +155,13 @@ class MainDisplay:
         :param new_screen: The screen replacing the previous one
         :return:
         """
-        #TODO(): Finish this method
+        # TODO(SP: Implement transition_screens): Call handoff(), then swap active_screen to new_screen
 
         old_screen = self.active_screen
         pass
 
     def shutdown(self):
-        # TODO(): Implement full shutdown + app clean up logic
+        # TODO(SP: Implement shutdown): Add pygame.quit() and sys.exit() so the window closes cleanly
         pass
 
 

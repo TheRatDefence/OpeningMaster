@@ -89,8 +89,7 @@ class Screen(ABC):
         :param last_UIManager: The UIManager used by the last screen
         :return: None
         """
-
-        # TODO: Finish this method
+        # TODO(SP: Implement screen transition animation): Use last_surface to fade/slide between screens
 
 
 

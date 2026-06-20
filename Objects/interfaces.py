@@ -32,7 +32,6 @@ class Screen(ABC):
         """
         return Screen._registry
 
-
    # ---------| Properties |--------- #
     @property
     @abstractmethod
@@ -50,37 +49,35 @@ class Screen(ABC):
         """
         ...
 
-
     # ---------| Abstract Methods |------------ #
-
-    @abstractmethod
-    def handle_event(self, event: p.event.Event) -> None:
-        """
-        Receives one pygame event per call.
-        :param event: The pygame event
-        :return: None
-        """
-        ...
-
-    @abstractmethod
-    def update(self, delta_ms: int) -> str |None:
-        """
-        Handles the per-frame logic
-        :param delta_ms: The time since last update call
-        :return: A string key to trigger a transition or None to stay
-        """
-        ...
-
     @abstractmethod
     def render(self) -> p.Surface:
         """
-        Draws the screen
+        Draws the screen. Must be defined by Screen classes
         :return: Returns the drawn screen
         """
         ...
 
-
     # ---------| Inheritable |------------ #
+    def handle_event(self, event: p.event.Event) -> None:
+        """
+        Base Behaviour: pass the event to local_ui_manager.
+        Override and call super() to add screen-specific event handling.
+        :param event: The pygame event
+        :return: None
+        """
+        self.local_ui_manager.process_events(event)
+        return None
+
+    def update(self, delta_ms: int) -> str |None:
+        """
+        Base Behaviour: pass delta_ms to local_ui_manager.
+        Override and call super() to add screen-specific update handling.
+        :param delta_ms: The time since last update call
+        :return: None or a string to trigger a screen transition
+        """
+        self.local_ui_manager.update(delta_ms)
+        return None
 
     @property
     def window_size(self) -> tuple[int, int]: # Important design decision: All screens need the window size, but shouldn't be able to access the main surface directly.

@@ -14,7 +14,7 @@ class MainDisplay:
         Creates a new display
         :param window_size: The size of the window as a tuple
         """
-        return p.display.set_mode(window_size).convert_alpha()
+        return p.display.set_mode(window_size)
 
     @staticmethod
     def _new_display_ui_manager(window_size: tuple[int, int]) -> pg.UIManager:
@@ -64,23 +64,24 @@ class MainDisplay:
 
 
     # -----------| Methods |------------- #
-    def __init__(self, window_size: tuple[int, int], framerate: int):
+    def __init__(self, window_size: tuple[int, int], framerate: int, default_screen: str = "dashboard"):
         """
         The main display. Handles the window and all screens.
 
         :param window_size: The size of the window as a tuple
         :param framerate: The framerate as an integer
+        :param default_screen: The screen name of the screen to be active when the display starts
         """
         p.init()
 
-        self._window_surface: p.Surface  = self._new_display_surface(window_size).convert_alpha()
+        self._window_surface: p.Surface  = self._new_display_surface(window_size)
         self._ui_manager: pg.UIManager   = self._new_display_ui_manager(window_size)
 
         self.framerate: int             = framerate
         self.clock: p.time.Clock        = p.time.Clock()
 
-        self.active_screen: Screen | None   = None # TODO(SP: Default screen): Replace hardcoded "dashboard" with a decorator-based default screen mechanism
         self._screen_map: dict[str, Screen] = self._build_screens()
+        self.active_screen: Screen          = self.retrieve_screen_instance(default_screen)
 
         self._running: bool = False
 
@@ -142,7 +143,8 @@ class MainDisplay:
                     pass
 
             # 4. render active screen
-            self.render_to_display(self.active_screen.render())
+            screen_surface = self.active_screen.render()
+            self.render_to_display(screen_surface)
 
             # 5. flip the display
             p.display.flip()

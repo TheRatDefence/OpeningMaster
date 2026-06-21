@@ -4,3 +4,4 @@ python-i18n==0.3.9
 chess
 matplotlib
 cryptography
+python-dotenv

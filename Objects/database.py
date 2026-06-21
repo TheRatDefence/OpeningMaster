@@ -1,6 +1,7 @@
 import os
-import sqlite3
+import sqlite3 as sq
 import dotenv
+
 import config
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -38,6 +39,29 @@ class DatabaseManager:
         A nonce is also generated, appended to the front of the cipher text and passed too AES-256 to prevent pattern matching attacks.
 
     """
+
+    # ----------| Encryption |---------- #
+
+    @staticmethod
+    def _load_environmental_variables() -> tuple[bytes,bytes]:
+        """
+        Loads APP_SECRET and SALT from the .env file.
+        :return: tuple containing secret, salt as bytes
+        """
+
+        if not dotenv.find_dotenv(".env"):  # If dotenv.dotenv_values returns an empty string
+            raise Exception(".env does not exist")
+
+        env_values = dotenv.dotenv_values()
+
+        secret = env_values["APP_SECRET"]
+        salt = env_values["SALT"]
+
+        if not secret or not salt:
+            raise ValueError("APP_SECRET or SALT are not defined in .env")
+
+        return secret.encode(), salt.encode()
+
     def _derive_key(self) -> bytes:
         """
         Key generation process:
@@ -46,10 +70,38 @@ class DatabaseManager:
         """
 
         key = PBKDF2HMAC(algorithm=hashes.SHA256(),
-                   length=32,
-                   salt=self._salt,
-                   iterations=100000).derive(self._secret)
+                         length=32,
+                         salt=self._salt,
+                         iterations=100000).derive(self._secret)
         return key
+
+    # ----------| Constructor |---------- #
+
+    def __init__(self):
+        """
+        Looks for the database file:
+        - If the file exists: decrypts -> loads it into memory
+        - If the file doesn't exist: create tables -> seed defaults -> save to disk
+        """
+
+        # -----| Encryption |----- #
+        self._secret, self._salt = self._load_environmental_variables()
+        self._key = self._derive_key()
+
+        # -----|  Database  |----- #
+
+        os.makedirs(config.DATA_DIR, exist_ok=True) # Create the data directory if it doesn't exist
+
+        self._db = sq.connect(":memory:")           # Opens an empty database in memory
+
+        if not os.path.exists(config.DB_PATH):      # Create a database file with defaults if one doesn't exist
+            self._create_tables()
+            self._seed_defaults()
+            self.save()
+
+        self.load()
+
+    # ----------| Private Methods |---------- #
 
     def _encrypt(self, data: bytes) -> bytes:
         """
@@ -76,38 +128,65 @@ class DatabaseManager:
         data = AESGCM(key=self._key).decrypt(nonce=nonce, data=cipher, associated_data=None)
         return data
 
-    @staticmethod
-    def load_environmental_variables() -> tuple[bytes,bytes]:
+    def _create_tables(self) -> None:
         """
-        Loads APP_SECRET and SALT from the .env file.
-        :return: tuple containing secret, salt as bytes
+        Creates openings and user_progress tables:
+
+        openings:
+            | id | name | pgn |
+
+        user_progress:
+            | opening_id | review_count | memory_points | next_review_date | status |
         """
+        db = self._db
 
-        if not dotenv.find_dotenv(".env"):  # If dotenv.dotenv_values returns an empty string
-            raise Exception(".env does not exist")
+        db.execute("CREATE TABLE IF NOT EXISTS openings "
+                   "( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, pgn TEXT )")
 
-        env_values = dotenv.dotenv_values()
+        db.execute("CREATE TABLE IF NOT EXISTS user_progress "
+                   "(opening_id INTEGER PRIMARY KEY, review_count INTEGER, memory_points REAL, next_review_date TEXT, status TEXT)")
 
-        secret = env_values["APP_SECRET"]
-        salt = env_values["SALT"]
+        db.commit()
 
-        if not secret or not salt:
-            raise ValueError("APP_SECRET or SALT are not defined in .env")
+        return None
 
-        return secret.encode(), salt.encode()
-
-    def __init__(self):
+    def _seed_defaults(self) -> None:
         """
-        Looks for the database file:
-        - If the file exists: decrypts -> loads it into memory
-        - If the file doesn't exist: create tables -> seed defaults -> save to disk
+        Inserts the default openings into the openings table
         """
+        db = self._db
 
-        self._secret, self._salt = self.load_environmental_variables()
+        db.executemany("INSERT INTO openings (name, pgn) VALUES (?, ?)", _DEFAULT_OPENINGS)
 
-        self._key = self._derive_key()
+        db.commit()
+        return None
 
-        # TODO(): Implement rest of init
-        pass
+    # ----------| Persistence |---------- #
 
+    def load(self):
+        """
+        Opens the database file then decrypts and deserializes it into memory
+        """
+        db = self._db
 
+        with open(config.DB_PATH, "rb") as file:
+            raw = self._decrypt(file.read())
+
+        db.deserialize(raw)
+        db.commit()
+
+        return None
+
+    def save(self) -> None:
+        """
+        Encrypts the database in memory and saves to the database file
+        """
+        db = self._db
+
+        raw = db.serialize()
+        encrypted = self._encrypt(raw)
+
+        with open(config.DB_PATH, "wb") as file: # Creates a new database file if none exists at DB_PATH
+            file.write(encrypted)
+
+        return None

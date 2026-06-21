@@ -5,3 +5,29 @@ _DEFAULT_OPENINGS = [
     ("King's Indian",    "1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3"),
     ("Queen's Gambit",   "1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3"),
 ]
+
+
+class DatabaseManager:
+    """
+    Manages a database with two tables:
+        1. Openings - Columns: id, name, pgn - This table stores the openings and their sequence of moves
+        2. User Progress - id, review count, score, next review, etc - Changes after each session and stores user practice data for each opening
+
+    Key Design idea: Keep the opening moves and user progress data separate.
+
+    The database is also stored in memory during runtime inorder to keep the data encrypted:
+    	Startup:  disk (encrypted blob) → decrypt → load into RAM
+        Running:  all queries hit the in-memory database
+        Shutdown: RAM → encrypt → write to disk
+
+    """
+
+    def __init__(self):
+        """
+        Looks for the database file:
+        - If the file exists: decrypts -> loads it into memory
+        - If the file doesn't exist: create tables -> seed defaults -> save to disk
+        """
+
+
+

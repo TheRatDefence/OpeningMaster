@@ -89,10 +89,10 @@ class DatabaseManager:
         self._key = self._derive_key()
 
         # -----|  Database  |----- #
-
         os.makedirs(config.DATA_DIR, exist_ok=True) # Create the data directory if it doesn't exist
 
         self._db = sq.connect(":memory:")           # Opens an empty database in memory
+        self._db.row_factory = sq.Row
 
         if not os.path.exists(config.DB_PATH):      # Create a database file with defaults if one doesn't exist
             self._create_tables()
@@ -189,4 +189,67 @@ class DatabaseManager:
         with open(config.DB_PATH, "wb") as file: # Creates a new database file if none exists at DB_PATH
             file.write(encrypted)
 
+        return None
+
+    # ----------| Public Methods |---------- #
+
+    def get_all_openings(self) -> list[dict]:
+        """
+        Queries every row of the openings table and returns them as a list of dicts.
+        :return: [{"id": 1, "name": "Italian Game", "pgn": "1. e4 ..."}, ...]
+        """
+        db = self._db
+
+        rows = db.execute("SELECT * FROM openings").fetchall()
+        openings = [dict(row) for row in rows]
+        return openings
+
+    def get_opening_by_id(self, opening_id: int) -> dict | None:
+        """
+        Queries a single row from openings where id matches, returns it as a dict or None if not found.
+        :param opening_id: The id of the opening
+        :return: {"id": 1, "name": "Italian Game", "pgn": "1. e4 ..."} | None
+        """
+        db = self._db
+
+        row = db.execute("SELECT * FROM openings WHERE id = ?", (opening_id,)).fetchone()
+        return dict(row) if row else None
+
+    def get_progress(self, opening_id: int) -> dict | None:
+        """
+        Queries the user_progress row for a given opening, returns it as a dict or None if no progress is recorded.
+        :param opening_id: The id of the opening
+        :return: {"opening_id": 1, "review_count": 3, "memory_points": 2.5, "next_review_date": "2026-06-25", "status": "in-progress"} | None
+        """
+        db = self._db
+
+        row = db.execute("SELECT * FROM user_progress WHERE opening_id = ?", (opening_id,)).fetchone()
+        return dict(row) if row else None
+
+    def upsert_progress(self, opening_id: int, **kwargs) -> None:
+        """
+        Inserts or updates the user_progress row for a given opening.
+        :param opening_id: The id of the opening
+        :param kwargs: Fields to be updated: e.g. status="mastered"
+        """
+        db = self._db
+
+        existing = self.get_progress(opening_id) or {}
+
+        defaults = {"review_count": 0,
+                    "memory_points": 0,
+                    "next_review_date": None,
+                    "status": "new"}
+
+        merged = {**defaults, **existing, **kwargs} # Creates a dict with merged values prioritising kwargs, then existing, then defaults
+
+        db.execute("INSERT OR REPLACE INTO user_progress "
+                   "(opening_id, review_count, memory_points, next_review_date, status) VALUES (?, ?, ?, ?, ?)",
+                   (opening_id,
+                              merged["review_count"],
+                              merged["memory_points"],
+                              merged["next_review_date"],
+                              merged["status"],))
+
+        db.commit()
         return None

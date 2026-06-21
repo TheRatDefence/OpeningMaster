@@ -1,7 +1,7 @@
 import pygame as p
 import pygame_gui as pg
 
-from Objects.interfaces import Screen
+from core.infrastructure import Screen
 
 @Screen.register_screen("dashboard")
 class DashboardScreen(Screen):

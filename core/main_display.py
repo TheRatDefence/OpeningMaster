@@ -1,7 +1,7 @@
 import sys
 import pygame as p
 import pygame_gui as pg
-from Objects.interfaces import Screen
+from core.infrastructure import Screen
 
 
 #---------------------------------------------------------------------------------------------------#
@@ -163,6 +163,7 @@ class MainDisplay:
         """
         Shuts down the app and exits cleanly.
         """
+        # TODO(SP: Save database on exit): Call AppState().db.save() here before quitting
         print("Quiting...")
 
         p.quit()

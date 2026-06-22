@@ -70,20 +70,18 @@ class Screen(ABC):
 
    # ---------| Properties |--------- #
     @property
-    @abstractmethod
     def local_screen_surface(self) -> p.Surface:
         """
         :return: The local screen surface
         """
-        ...
+        return self._screen_surface
 
     @property
-    @abstractmethod
     def local_ui_manager(self) -> pg.UIManager:
         """
         :return: The local UIManager
         """
-        ...
+        return self._ui_manager
 
     # ---------| Abstract Methods |------------ #
     @abstractmethod
@@ -95,6 +93,12 @@ class Screen(ABC):
         ...
 
     # ---------| Inheritable |------------ #
+    def __init__(self):
+        window_size = self.window_size
+
+        self._screen_surface: p.Surface = p.Surface(window_size).convert_alpha()
+        self._ui_manager: pg.UIManager  = pg.UIManager(window_size)
+
     def handle_event(self, event: p.event.Event) -> None:
         """
         Base Behaviour: pass the event to local_ui_manager.

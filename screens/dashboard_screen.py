@@ -9,20 +9,9 @@ class DashboardScreen(Screen):
         """
         The dashboard Screen
         """
-        window_size = self.window_size
-
-        self._screen_surface: p.Surface = p.Surface(window_size).convert_alpha()
-        self._ui_manager: pg.UIManager  = pg.UIManager(window_size)
+        super().__init__() # Inherits the screen_surface and ui_manager
 
     # ---------| Properties |--------- #
-
-    @property
-    def local_screen_surface(self) -> p.Surface:
-        return self._screen_surface
-
-    @property
-    def local_ui_manager(self) -> pg.UIManager:
-        return self._ui_manager
 
     # ---------| Methods |------------ #
 

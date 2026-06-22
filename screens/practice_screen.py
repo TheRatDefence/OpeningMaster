@@ -265,25 +265,46 @@ class BoardRenderer:
             hl.fill(colour)
             surface.blit(hl, (x, y))
 
+    @staticmethod
+    def build_board_grid(board: chess.Board) -> list[list[str | None]]:
+        """
+        Converts a chess.Board into an 8x8 grid indexed by [rank][file].
+        board_grid[0][0] = a1, board_grid[7][7] = h8.
+        Each cell holds the piece symbol (e.g. 'P', 'k') or None if empty.
+        """
+        board_grid: list[list[str | None]] = [[None] * _BOARD_SQUARES for _ in range(_BOARD_SQUARES)]
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece:
+                rank = chess.square_rank(square)
+                file = chess.square_file(square)
+                board_grid[rank][file] = piece.symbol()
+        return board_grid
+
     def draw_pieces(self, surface: p.Surface, board: chess.Board,
                     drag_from_sq: chess.Square | None,
                     anim: AnimationState,
                     board_offset: tuple, square_size: int, flipped: bool) -> None:
-        """Blits all pieces. Skips dragged piece and both ends of any active slide."""
-        for square in chess.SQUARES:
-            if square == drag_from_sq:
-                continue
-            if anim.is_sliding and square == anim.slide_sq:
-                continue
-            if anim.is_sliding and anim.slide_move is not None and square == anim.slide_move.from_square:
-                continue
-            piece = board.piece_at(square)
-            if not piece:
-                continue
-            x, y = self.sq_to_pixel(square, board_offset, square_size, flipped)
-            if square == anim.shake_sq:
-                x += anim.shake_offset_px
-            surface.blit(self.images[piece.symbol()], (x, y))
+        """Blits all pieces. Skips dragged piece and both ends of any active slide.
+        Uses an 8x8 board_grid[rank][file] to look up piece symbols by coordinate."""
+        board_grid = self.build_board_grid(board)
+
+        for rank in range(_BOARD_SQUARES):
+            for file in range(_BOARD_SQUARES):
+                symbol = board_grid[rank][file]
+                if symbol is None:
+                    continue
+                square = chess.square(file, rank)
+                if square == drag_from_sq:
+                    continue
+                if anim.is_sliding and square == anim.slide_sq:
+                    continue
+                if anim.is_sliding and anim.slide_move is not None and square == anim.slide_move.from_square:
+                    continue
+                x, y = self.sq_to_pixel(square, board_offset, square_size, flipped)
+                if square == anim.shake_sq:
+                    x += anim.shake_offset_px
+                surface.blit(self.images[symbol], (x, y))
 
     def draw_drag_piece(self, surface: p.Surface, drag_piece_symbol: str | None,
                         drag_pos: tuple, square_size: int) -> None:

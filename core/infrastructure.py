@@ -105,6 +105,7 @@ class Screen(ABC):
 
         self._screen_surface: p.Surface = p.Surface(window_size).convert_alpha()
         self._ui_manager: pg.UIManager  = pg.UIManager(window_size)
+        self.state = AppState()
 
     def handle_event(self, event: p.event.Event) -> None:
         """
@@ -139,5 +140,37 @@ class Screen(ABC):
             return display.get_size()
         else:
             raise Exception("A MainDisplay instance must be initialised before initialising screens")
+    
+    @staticmethod
+    def panel_pct_rect(panel: pg.elements.UIPanel, x: float, y: float, w: float, h: float) -> p.Rect:
+        """
+        Takes in rectangle dimensions as percentages relative to a UIPanel's inner size.
+        :param panel: The parent UIPanel
+        :param x: Percentage from the left of the panel
+        :param y: Percentage from the top of the panel
+        :param w: Percentage of the panel width
+        :param h: Percentage of the panel height
+        :return: pygame.Rect
+        """
+        p_rect = panel.get_container().get_rect()
+        pw, ph = p_rect.width, p_rect.height
+
+        return p.Rect(pw * x, ph * y, pw * w, ph * h)
+
+    def pct_rect(self, x: float, y: float, w: float, h: float) -> p.Rect:
+        """
+        Takes in rectangle dimensions as percentages and returns a pygame rectangle.
+        :param x: Percentage from the left
+        :param y: Percentage from the top
+        :param w: Percentage of the width
+        :param h: Percentage of the height
+        :return: Pygame.Rect
+        """
+        w_width, w_height = self.window_size
+
+        return p.Rect( w_width*x,
+                       w_height*y,
+                       w_width*w,
+                       w_height*h )
 
 #---------------------------------------------------------------------------------------------------#

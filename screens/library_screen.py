@@ -24,6 +24,8 @@ class LibraryScreen(Screen):
 
         self._right_panel_container: pg.elements.UIPanel = self.refresh_right_panel()
 
+        self._transition = False
+
     # -----------------| Helper Methods |----------------- #
 
     def create_opening_list(self) -> pg.elements.UISelectionList:
@@ -51,11 +53,11 @@ class LibraryScreen(Screen):
 
         rect = self.panel_pct_rect(panel, 0.05, 0.85, 0.9, 0.10)
 
-        # TODO(): Add the command parameter to call a transition
         return pg.elements.UIButton( relative_rect=rect,
                                      manager=self.local_ui_manager,
                                      text="Practice",
-                                     container=panel )
+                                     container=panel,
+                                     command=lambda: setattr(self, '_transition', True))    # Set the transition flag True if clicked
 
     def create_move_list(self, panel: pg.elements.UIPanel) -> pg.elements.UITextBox:
         """
@@ -133,6 +135,15 @@ class LibraryScreen(Screen):
                 name_clicked = event.text
                 self.select_opening_from_name(name_clicked)
                 self.refresh_right_panel()
+
+        return None
+
+    def update(self, delta_ms: int) -> str |None:
+        super().update(delta_ms)
+
+        if self._transition:
+            self._transition = False
+            return "practice"
 
         return None
 

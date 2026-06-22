@@ -1,9 +1,9 @@
-from core.infrastructure import AppState
-from core.main_display import MainDisplay
-from data.database import DatabaseManager
-import screens
-# TODO(SP: Wire screen imports): Import LibraryScreen and PracticeScreen here so they self-register via @Screen.register_screen
+from core.infrastructure    import AppState
+from core.main_display      import MainDisplay
+from data.database          import DatabaseManager
+
 import config
+import screens                                              # Automatically imports/registers all screen classes (via __init__.py)
 
 if __name__ == "__main__":
     db = DatabaseManager()                                  # Database

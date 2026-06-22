@@ -15,6 +15,9 @@ class DashboardScreen(Screen):
 
     # ---------| Methods |------------ #
 
+    def on_enter(self) -> None:
+        return None
+
     def render(self) -> p.Surface:
         # TODO(): Replace placeholders with actual UI
         screen = self._screen_surface

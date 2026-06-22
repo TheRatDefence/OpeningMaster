@@ -158,6 +158,7 @@ class MainDisplay:
         :return:
         """
         self.active_screen = new_screen
+        self.active_screen.on_enter()
 
     def shutdown(self) -> None:
         """

@@ -92,6 +92,13 @@ class Screen(ABC):
         """
         ...
 
+    @abstractmethod
+    def on_enter(self) -> None:
+        """
+        Called by the MainDisplay whenever a screen becomes active.
+        """
+        ...
+
     # ---------| Inheritable |------------ #
     def __init__(self):
         window_size = self.window_size

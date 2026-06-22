@@ -72,6 +72,7 @@ class MainDisplay:
         :param framerate: The framerate as an integer
         :param default_screen: The screen name of the screen to be active when the display starts
         """
+        p.mixer.init()
         p.init()
 
         self._window_surface: p.Surface  = self._new_display_surface(window_size)

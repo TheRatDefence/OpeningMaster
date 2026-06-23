@@ -1,7 +1,7 @@
 import os
 
-WINDOW_SIZE = (1920, 1080)  # The size of the window in pixels
-FRAMERATE = 165             # The framerate in frames per second
+WINDOW_SIZE = (1920, 1080)
+FRAMERATE = 165
 
 # Board sizing — SQUARE_SIZE is dynamic (board_size // 8) on PracticeScreen
 BOARD_SIZE_DEFAULT = 640

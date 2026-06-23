@@ -5,5 +5,4 @@ chess
 matplotlib
 cryptography
 python-dotenv
-
 pygame

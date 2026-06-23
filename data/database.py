@@ -20,40 +20,15 @@ _DEFAULT_OPENINGS = [
 
 
 class DatabaseManager:
-    """
-    Manages a database with two tables:
-        1. Openings - Columns: id, name, pgn - This table stores the openings and their sequence of moves
-        2. User Progress - id, review count, score, next review, etc - Changes after each session and stores user practice data for each opening
-
-    Key Design idea: Keep the opening moves and user progress data separate.
-
-    The database is also stored in memory during runtime inorder to keep the data encrypted:
-    	Startup:  disk (encrypted blob) → decrypt → load into RAM
-        Running:  all queries hit the in-memory database
-        Shutdown: RAM → encrypt → write to disk
-
-    Encryption:
-        AES-256 is symmetrical - Only one key is needed:"chess-opening-trainer-secret-key"
-        However, AES-256 needs a 32 byte, randomish key - Hash the key to output a fixed 32 byte key
-        Slow hashing algorithm has to be used - PBKDF2HMAC runs the hash thousands of times in a loop
-        A nonce is also generated, appended to the front of the cipher text and passed too AES-256 to prevent pattern matching attacks.
-
-    """
-
-    # ----------| Encryption |---------- #
+    """Manages the encrypted SQLite database for openings and progress.
+    Loads from / saves to an AES-256-GCM encrypted file at DB_PATH."""
 
     @staticmethod
-    def _load_environmental_variables() -> tuple[bytes,bytes]:
-        """
-        Loads APP_SECRET and SALT from the .env file.
-        :return: tuple containing secret, salt as bytes
-        """
-
-        if not dotenv.find_dotenv(".env"):  # If dotenv.dotenv_values returns an empty string
+    def _load_environmental_variables() -> tuple[bytes, bytes]:
+        if not dotenv.find_dotenv(".env"):
             raise Exception(".env does not exist")
 
         env_values = dotenv.dotenv_values()
-
         secret = env_values["APP_SECRET"]
         salt = env_values["SALT"]
 
@@ -63,81 +38,43 @@ class DatabaseManager:
         return secret.encode(), salt.encode()
 
     def _derive_key(self) -> bytes:
-        """
-        Key generation process:
-        _APP_SECRET + _SALT -> PBKDF2HMAC -> 32-byte AES key
-        :return: 32 byte key
-        """
-
+        """Derives a 32-byte AES key from the app secret and salt using PBKDF2HMAC."""
         key = PBKDF2HMAC(algorithm=hashes.SHA256(),
                          length=32,
                          salt=self._salt,
                          iterations=100000).derive(self._secret)
         return key
 
-    # ----------| Constructor |---------- #
-
     def __init__(self):
-        """
-        Looks for the database file:
-        - If the file exists: decrypts -> loads it into memory
-        - If the file doesn't exist: create tables -> seed defaults -> save to disk
-        """
-
-        # -----| Encryption |----- #
+        """Opens the database, creating and seeding a fresh one if no save file exists."""
         self._secret, self._salt = self._load_environmental_variables()
         self._key = self._derive_key()
 
-        # -----|  Database  |----- #
-        os.makedirs(config.DATA_DIR, exist_ok=True) # Create the data directory if it doesn't exist
-
-        self._db = sq.connect(":memory:")           # Opens an empty database in memory
+        os.makedirs(config.DATA_DIR, exist_ok=True)
+        self._db = sq.connect(":memory:")
         self._db.row_factory = sq.Row
 
-        if not os.path.exists(config.DB_PATH):      # Create a database file with defaults if one doesn't exist
+        if not os.path.exists(config.DB_PATH):
             self._create_tables()
             self._seed_defaults()
             self.save()
 
         self.load()
 
-    # ----------| Private Methods |---------- #
-
     def _encrypt(self, data: bytes) -> bytes:
-        """
-        1. Generate a fresh random nonce
-        2. Encrypt the data using the key and nonce
-        3. Return nonce + ciphertext
-
-        :return: nonce + ciphertext as bytes
-        """
+        """Encrypts the in-memory database to bytes using AES-256-GCM."""
         nonce = os.urandom(12)
         encrypted = AESGCM(key=self._key).encrypt(nonce=nonce, data=data, associated_data=None)
         return nonce + encrypted
 
     def _decrypt(self, encrypted: bytes) -> bytes:
-        """
-        1. Split nonce from ciphertext
-        2. Decrypt the data using the key and nonce
-        3. Return decrypted data
-
-        :param encrypted: the encrypted data in bytes
-        :return: The decrypted data in bytes
-        """
+        """Decrypts the given bytes and loads them into the in-memory database."""
         nonce, cipher = encrypted[:12], encrypted[12:]
         data = AESGCM(key=self._key).decrypt(nonce=nonce, data=cipher, associated_data=None)
         return data
 
     def _create_tables(self) -> None:
-        """
-        Creates openings and user_progress tables:
-
-        openings:
-            | id | name | pgn |
-
-        user_progress:
-            | opening_id | review_count | memory_points | next_review_date | status |
-        """
+        """Creates the openings and progress tables if they don't already exist."""
         db = self._db
 
         db.execute("CREATE TABLE IF NOT EXISTS openings "
@@ -148,25 +85,14 @@ class DatabaseManager:
 
         db.commit()
 
-        return None
-
     def _seed_defaults(self) -> None:
-        """
-        Inserts the default openings into the openings table
-        """
+        """Seeds the openings table with default openings."""
         db = self._db
-
         db.executemany("INSERT INTO openings (name, pgn) VALUES (?, ?)", _DEFAULT_OPENINGS)
-
         db.commit()
-        return None
-
-    # ----------| Persistence |---------- #
 
     def load(self):
-        """
-        Opens the database file then decrypts and deserializes it into memory
-        """
+        """Opens the database file, decrypts it, and loads it into memory."""
         db = self._db
 
         with open(config.DB_PATH, "rb") as file:
@@ -175,63 +101,36 @@ class DatabaseManager:
         db.deserialize(raw)
         db.commit()
 
-        return None
-
     def save(self) -> None:
-        """
-        Encrypts the database in memory and saves to the database file
-        """
+        """Encrypts the in-memory database and saves it to disk."""
         db = self._db
-
         raw = db.serialize()
         encrypted = self._encrypt(raw)
 
-        with open(config.DB_PATH, "wb") as file: # Creates a new database file if none exists at DB_PATH
+        with open(config.DB_PATH, "wb") as file:
             file.write(encrypted)
 
-        return None
-
-    # ----------| Public Methods |---------- #
-
     def get_all_openings(self) -> list[dict]:
-        """
-        Queries every row of the openings table and returns them as a list of dicts.
-        :return: [{"id": 1, "name": "Italian Game", "pgn": "1. e4 ..."}, ...]
-        """
+        """Returns all openings from the database."""
         db = self._db
-
         rows = db.execute("SELECT * FROM openings").fetchall()
         openings = [dict(row) for row in rows]
         return openings
 
     def get_opening_by_id(self, opening_id: int) -> dict | None:
-        """
-        Queries a single row from openings where id matches, returns it as a dict or None if not found.
-        :param opening_id: The id of the opening
-        :return: {"id": 1, "name": "Italian Game", "pgn": "1. e4 ..."} | None
-        """
+        """Returns the opening with the given id, or None if not found."""
         db = self._db
-
         row = db.execute("SELECT * FROM openings WHERE id = ?", (opening_id,)).fetchone()
         return dict(row) if row else None
 
     def get_progress(self, opening_id: int) -> dict | None:
-        """
-        Queries the user_progress row for a given opening, returns it as a dict or None if no progress is recorded.
-        :param opening_id: The id of the opening
-        :return: {"opening_id": 1, "review_count": 3, "memory_points": 2.5, "next_review_date": "2026-06-25", "status": "in-progress"} | None
-        """
+        """Returns the user progress for the given opening, or None if no progress is recorded."""
         db = self._db
-
         row = db.execute("SELECT * FROM user_progress WHERE opening_id = ?", (opening_id,)).fetchone()
         return dict(row) if row else None
 
     def upsert_progress(self, opening_id: int, **kwargs) -> None:
-        """
-        Inserts or updates the user_progress row for a given opening.
-        :param opening_id: The id of the opening
-        :param kwargs: Fields to be updated: e.g. status="mastered"
-        """
+        """Inserts or updates the user progress for the given opening."""
         db = self._db
 
         existing = self.get_progress(opening_id) or {}
@@ -241,7 +140,7 @@ class DatabaseManager:
                     "next_review_date": None,
                     "status": "new"}
 
-        merged = {**defaults, **existing, **kwargs} # Creates a dict with merged values prioritising kwargs, then existing, then defaults
+        merged = {**defaults, **existing, **kwargs}
 
         db.execute("INSERT OR REPLACE INTO user_progress "
                    "(opening_id, review_count, memory_points, next_review_date, status) VALUES (?, ?, ?, ?, ?)",

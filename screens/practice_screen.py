@@ -10,18 +10,18 @@ import pygame_gui as pg
 from core.infrastructure import Screen, AppState
 import config
 
-# ── Visual constants ───────────────────────────────────────────────────────────
+# ----------| Visual Constants |---------- #
 _BOARD_SQUARES      = 8
 _HIGHLIGHT_COLOUR   = (255, 255, 0, 120)    # RGBA — selected square
 _HOVER_COLOUR       = (100, 180, 255, 100)  # RGBA — drag hover square
 _FLASH_COLOUR       = (200, 0, 0)           # RGB  — incorrect move screen flash
 
-# ── Layout constants ───────────────────────────────────────────────────────────
+# ----------| Layout Constants |---------- #
 _BOARD_MARGIN       = 60    # px gap from window edges to board
 _PANEL_WIDTH        = 380   # fixed px width of the right panel
 _PANEL_MARGIN       = 30    # px gap between board right edge and panel
 
-# ── Animation / timing constants ───────────────────────────────────────────────
+# ------| Animation / Timing Constants |------ #
 _FLASH_DURATION_MS    = 200
 _SHAKE_DURATION_MS    = 400
 _SHAKE_AMPLITUDE_PX   = 8
@@ -30,9 +30,9 @@ _OPPONENT_DELAY_MS    = 500
 _COMPLETE_PAUSE_MS    = 1000
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  AnimationState — owns all timers and animated values
-# ══════════════════════════════════════════════════════════════════════════════
+#---------------------------------------------------------------------------------------------------#
+#                    AnimationState — owns all timers and animated values                         #
+#---------------------------------------------------------------------------------------------------#
 
 class AnimationState:
     """Tracks all in-flight animation state for PracticeScreen."""
@@ -59,7 +59,7 @@ class AnimationState:
         """Resets all animation state to idle."""
         self.__init__()
 
-    # ── Derived values ─────────────────────────────────────────────────────────
+    # ----------| Derived Values |---------- #
 
     @property
     def flash_alpha(self) -> int:
@@ -97,7 +97,7 @@ class AnimationState:
         tx, ty = self.slide_to_px
         return int(fx + (tx - fx) * t), int(fy + (ty - fy) * t)
 
-    # ── Tick ───────────────────────────────────────────────────────────────────
+    # ----------| Tick |---------- #
 
     def tick(self, delta_ms: int) -> list[str]:
         """
@@ -132,7 +132,7 @@ class AnimationState:
 
         return events
 
-    # ── Trigger helpers ────────────────────────────────────────────────────────
+    # --------| Trigger Helpers |--------- #
 
     def trigger_flash(self) -> None:
         self.flash_timer = _FLASH_DURATION_MS
@@ -158,9 +158,9 @@ class AnimationState:
         self.complete_timer = _COMPLETE_PAUSE_MS
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  BoardRenderer — all drawing logic
-# ══════════════════════════════════════════════════════════════════════════════
+#---------------------------------------------------------------------------------------------------#
+#                              BoardRenderer — all drawing logic                                   #
+#---------------------------------------------------------------------------------------------------#
 
 class BoardRenderer:
     """Handles all board and piece rendering for PracticeScreen."""
@@ -168,7 +168,7 @@ class BoardRenderer:
     def __init__(self, square_size: int):
         self.images: dict = self._load_images(square_size)
 
-    # ── Image loading ──────────────────────────────────────────────────────────
+    # ----------| Image Loading |---------- #
 
     @staticmethod
     def _load_images(square_size: int) -> dict:
@@ -194,7 +194,7 @@ class BoardRenderer:
         """Reloads all images at a new square size."""
         self.images = self._load_images(square_size)
 
-    # ── Coordinate helpers ─────────────────────────────────────────────────────
+    # -------| Coordinate Helpers |-------- #
 
     @staticmethod
     def visual_row(rank: int, flipped: bool) -> int:
@@ -247,7 +247,7 @@ class BoardRenderer:
 
         return chess.square(file, rank)
 
-    # ── Draw calls ─────────────────────────────────────────────────────────────
+    # ----------| Draw Calls |---------- #
 
     def draw_board(self, surface: p.Surface, board_offset: tuple) -> None:
         """Blits the board image at board_offset."""
@@ -360,7 +360,7 @@ class PracticePanel:
         self._play_again_btn: pg.elements.UIButton   | None = None
         self._return_btn:     pg.elements.UIButton   | None = None
 
-    # ── Panel rect (fixed position regardless of board size) ──────────────────
+    # ----------| Panel Rect |---------- #
 
     def _panel_rect(self) -> p.Rect:
         w, h = self._window_size
@@ -369,14 +369,14 @@ class PracticePanel:
         ph = h - 2 * _BOARD_MARGIN
         return p.Rect(x, y, _PANEL_WIDTH, ph)
 
-    # ── pct helper relative to panel inner area ────────────────────────────────
+    # --------| Percent Helper |--------- #
 
     def _pct(self, x: float, y: float, w: float, h: float) -> p.Rect:
         assert self._panel is not None
         r = self._panel.get_container().get_rect()
         return p.Rect(r.width * x, r.height * y, r.width * w, r.height * h)
 
-    # ── Build / rebuild ────────────────────────────────────────────────────────
+    # -------| Build / Rebuild |-------- #
 
     def build(self, opening_name: str) -> None:
         """Creates the panel and all its child elements from scratch."""
@@ -493,7 +493,7 @@ class PracticePanel:
             self._play_again_btn = None
             self._return_btn     = None
 
-    # ── Button identity helpers (used by PracticeScreen._handle_button) ────────
+    # -----| Button Identity Helpers |------ #
 
     def is_side_button(self, element) -> bool:
         return element in self._side_btns
@@ -561,13 +561,13 @@ class PracticeScreen(Screen):
         self._transitioning:   bool       = False
         self._session_ended:   bool       = False
 
-    # ── Properties ─────────────────────────────────────────────────────────────
+    # ----------| Properties |---------- #
 
     @property
     def _square_size(self) -> int:
         return self._board_size // _BOARD_SQUARES
 
-    # ── Setup helpers ──────────────────────────────────────────────────────────
+    # --------| Setup Helpers |--------- #
 
     def _calc_board_offset(self) -> tuple[int, int]:
         """Centres the board horizontally in the space left of the panel, vertically in the window."""
@@ -624,7 +624,7 @@ class PracticeScreen(Screen):
         x, y = pos
         return bx <= x < bx + self._board_size and by <= y < by + self._board_size
 
-    # ── Rendering ──────────────────────────────────────────────────────────────
+    # ----------| Rendering |---------- #
 
     def render(self) -> p.Surface:
         """Draws the full practice screen and returns it."""
@@ -649,7 +649,7 @@ class PracticeScreen(Screen):
         self.local_ui_manager.draw_ui(screen)
         return screen
 
-    # ── Input handling ─────────────────────────────────────────────────────────
+    # --------| Input Handling |--------- #
 
     def handle_event(self, event: p.event.Event) -> None:
         """Routes events to button handler and drag-and-drop logic."""
@@ -740,7 +740,7 @@ class PracticeScreen(Screen):
         self._board_offset = self._calc_board_offset()
         self._renderer.reload(self._square_size)
 
-    # ── Move logic ─────────────────────────────────────────────────────────────
+    # ----------| Move Logic |---------- #
 
     def attempt_move(self, from_sq: chess.Square, to_sq: chess.Square) -> None:
         """Validates the player's move against the expected move and advances or penalises."""
@@ -829,7 +829,7 @@ class PracticeScreen(Screen):
         if self._move_index >= len(self._moves):
             self.on_session_complete()
 
-    # ── Session completion ──────────────────────────────────────────────────────
+    # -------| Session Completion |-------- #
 
     def on_session_complete(self) -> None:
         """Saves progress, plays end sound, and starts the completion pause."""
@@ -850,7 +850,7 @@ class PracticeScreen(Screen):
         self._play("game_end")
         self._anim.trigger_complete_pause()
 
-    # ── Game loop ──────────────────────────────────────────────────────────────
+    # ----------| Game Loop |---------- #
 
     def on_enter(self) -> None:
         """Reloads the selected opening and resets all session state."""

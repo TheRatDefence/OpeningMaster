@@ -1,4 +1,35 @@
+# Virtual environments
 .venv/
 .venv*/
 venv/
+
+# Environment secrets
 /.env
+
+# PyCharm IDE
+.idea/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# Test suite (AI-generated, not part of submission)
+tests/
+pytest.ini
+
+# Docs and generated files
+3. Documentation/
+SETUP.md
+generate_dfd.py
+generate_structure_chart.py
+dfd_level0.dfd
+dfd_level0_raw.dot
+dfd_level1.dfd
+dfd_level1_raw.dot
+
+# Debug utilities
+debug_env.py
+
+# Encrypted data
+*.db.enc

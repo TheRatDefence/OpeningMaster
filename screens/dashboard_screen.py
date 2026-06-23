@@ -6,17 +6,11 @@ from core.infrastructure import Screen
 @Screen.register_screen("dashboard")
 class DashboardScreen(Screen):
     def __init__(self):
-        """
-        The dashboard Screen
-        """
-        super().__init__() # Inherits the screen_surface and ui_manager
-
-    # ---------| Properties |--------- #
-
-    # ---------| Methods |------------ #
+        """The dashboard screen."""
+        super().__init__()
 
     def on_enter(self) -> None:
-        return None
+        pass
 
     def render(self) -> p.Surface:
         # TODO(): Replace placeholders with actual UI

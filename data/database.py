@@ -35,7 +35,9 @@ class DatabaseManager:
         if not secret or not salt:
             raise ValueError("APP_SECRET or SALT are not defined in .env")
 
-        return secret.encode(), salt.encode()
+        secret_bytes = secret.encode() if isinstance(secret, str) else secret
+        salt_bytes = salt.encode() if isinstance(salt, str) else salt
+        return secret_bytes, salt_bytes
 
     def _derive_key(self) -> bytes:
         """Derives a 32-byte AES key from the app secret and salt using PBKDF2HMAC."""
@@ -95,11 +97,15 @@ class DatabaseManager:
         """Opens the database file, decrypts it, and loads it into memory."""
         db = self._db
 
-        with open(config.DB_PATH, "rb") as file:
-            raw = self._decrypt(file.read())
-
-        db.deserialize(raw)
-        db.commit()
+        try:
+            with open(config.DB_PATH, "rb") as file:
+                raw = self._decrypt(file.read())
+            db.deserialize(raw)
+            db.commit()
+        except Exception:
+            self._create_tables()
+            self._seed_defaults()
+            self.save()
 
     def save(self) -> None:
         """Encrypts the in-memory database and saves it to disk."""

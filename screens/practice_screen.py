@@ -698,7 +698,8 @@ class PracticeScreen(Screen):
             return
 
         if self._panel.is_stuck(pressed):
-            if self._move_index < len(self._moves) and not self._session_ended:
+            if (self._move_index < len(self._moves) and not self._session_ended
+                    and not self._anim.is_sliding):
                 self._session_results.append(False)
                 self.play_opponent_move()
             return
@@ -847,6 +848,7 @@ class PracticeScreen(Screen):
         self.state.db.upsert_progress(opening_id,
                                       review_count=review_count,
                                       memory_points=memory_points)
+        self.state.db.save()
         self._play("game_end")
         self._anim.trigger_complete_pause()
 

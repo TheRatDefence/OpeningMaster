@@ -14,8 +14,8 @@ pip install -r .\requirements.txt
 Once all packages have been installed, open the ```.env.example``` file.
 This file contains two variables:
 ```
-APP_SECRET=b"your-secret-key-here"
-SALT=b"your-salt-value-here"
+APP_SECRET="your-secret-key-here"
+SALT="your-salt-value-here"
 ```
 Replace the strings with your values, then save the file as ```.env``` (without ```.example```).
 

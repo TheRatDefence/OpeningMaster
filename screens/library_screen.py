@@ -111,7 +111,7 @@ class LibraryScreen(Screen):
         ui = self.local_ui_manager
 
         # TODO(): Theming / colour scheme
-        background_colour = (255, 0, 0)
+        background_colour = (60, 60, 60)
 
         screen.fill(background_colour)
         ui.draw_ui(screen)

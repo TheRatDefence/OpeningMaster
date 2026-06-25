@@ -15,6 +15,10 @@ class MainDisplay:
 
     @staticmethod
     def _new_display_ui_manager(window_size: tuple[int, int]) -> pg.UIManager:
+        import os
+        theme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "theme.json")
+        if os.path.exists(theme_path):
+            return pg.UIManager(window_size, theme_path)
         return pg.UIManager(window_size)
 
     @staticmethod
@@ -61,6 +65,9 @@ class MainDisplay:
         self.active_screen: Screen          = self.retrieve_screen_instance(default_screen)
 
         self._running: bool = False
+        self._back_button: pg.elements.UIButton | None = None
+        self._create_back_button()
+        self._update_back_button_visibility()
 
     def retrieve_screen_instance(self, screen_name: str) -> Screen:
         """Returns the instantiated screen for the given name, or raises ValueError if not found."""
@@ -68,6 +75,15 @@ class MainDisplay:
             return self._screen_map[screen_name]
         else:
             raise ValueError("Screen name does not exist")
+
+    def _create_back_button(self) -> None:
+        """Creates a back button in the top-left corner."""
+        button_rect = p.Rect(10, 10, 120, 50)
+        self._back_button = pg.elements.UIButton(
+            relative_rect=button_rect,
+            text="← Back",
+            manager=self._ui_manager
+        )
 
     def render_to_display(self, screen_surface: p.Surface) -> None:
         self._window_surface.blit(screen_surface, dest=(0, 0))
@@ -82,6 +98,9 @@ class MainDisplay:
                 match event.type:
                     case p.QUIT:
                         self._running = False
+                    case pg.UI_BUTTON_PRESSED:
+                        if event.ui_element == self._back_button:
+                            self.transition_screens(self.retrieve_screen_instance("library"))
 
                 self.active_screen.handle_event(event)
                 self._ui_manager.process_events(event)
@@ -106,6 +125,24 @@ class MainDisplay:
         """Switches the active screen to new_screen."""
         self.active_screen = new_screen
         self.active_screen.on_enter()
+        self._update_back_button_visibility()
+
+    def _update_back_button_visibility(self) -> None:
+        """Shows back button on all screens except library."""
+        if self._back_button is None:
+            return
+
+        # Get the current screen name from the registry
+        current_screen_name = None
+        for name, screen in self._screen_map.items():
+            if screen == self.active_screen:
+                current_screen_name = name
+                break
+
+        if current_screen_name == "library":
+            self._back_button.hide()
+        else:
+            self._back_button.show()
 
     def shutdown(self) -> None:
         print("Quiting...")

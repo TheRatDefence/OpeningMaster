@@ -68,7 +68,14 @@ class Screen(ABC):
         window_size = self.window_size
 
         self._screen_surface: p.Surface = p.Surface(window_size).convert_alpha()
-        self._ui_manager: pg.UIManager = pg.UIManager(window_size)
+
+        import os
+        theme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "theme.json")
+        if os.path.exists(theme_path):
+            self._ui_manager: pg.UIManager = pg.UIManager(window_size, theme_path)
+        else:
+            self._ui_manager: pg.UIManager = pg.UIManager(window_size)
+
         self.state = AppState()
 
     def handle_event(self, event: p.event.Event) -> None:

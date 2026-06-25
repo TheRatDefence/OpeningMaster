@@ -21,7 +21,7 @@ class DashboardScreen(Screen):
         bg_colour = (255, 255, 255)
         screen.fill(bg_colour)
 
-        font = p.font.SysFont(None, 36)
+        font = p.font.SysFont(None, 48)
         text = font.render("Dashboard Screen - Placeholder", True, text_colour)
 
         screen.blit(text, (0, 0))

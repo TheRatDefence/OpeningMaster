@@ -2,6 +2,9 @@
 
 ---
 
+## User Docs
+https://sites.google.com/education.nsw.gov.au/openingmaster/
+
 ## Installation
 
 #### Dependencies

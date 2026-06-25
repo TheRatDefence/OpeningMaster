@@ -26,3 +26,14 @@ Replace the strings with your values, then save the file as ```.env``` (without 
 To use the app, simply run ```main.py``` via python after completing the installation steps.
 
 Additionally, there is a list of config options that are accessible in ```config.py```.
+
+## Documentation
+
+### Class Diagram
+![Class Diagram](documentation/Class%20Diagram.svg)
+
+### Flowchart
+![Flowchart](documentation/Flowchart.drawio.svg)
+
+### App Structure Chart
+![App Structure Chart](documentation/chess_app_structure_chart.drawio.svg)
